@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Reinas en Ajedrez</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="controls">
+        <button id="menu-button">Niveles</button>
+        <div id="size-menu" class="hidden">
+            <button class="size-btn" data-size="4">4x4</button>
+            <button class="size-btn" data-size="5">5x5</button>
+            <button class="size-btn" data-size="6">6x6</button>
+            <button class="size-btn" data-size="7">7x7</button>
+            <button class="size-btn" data-size="8">8x8</button>
+            <button class="size-btn" data-size="9">9x9</button>
+            <button class="size-btn" data-size="10">10x10</button>
+        </div>
+    </div>
+    <div id="board"></div>
+
+    <!-- Popup de Ganador -->
+    <div id="winner-popup" class="hidden">
+        <div id="winner-message">
+            <h2>¡Felicidades!</h2>
+            <p>¡Has colocado todas las reinas!</p>
+        </div>
+    </div>
+
+    <!-- Fondo de overlay detrás del popup -->
+    <div id="popup-overlay"></div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

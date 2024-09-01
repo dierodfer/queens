@@ -1,0 +1,151 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    justify-content: center;
+}
+
+#controls {
+    text-align: center;
+}
+
+label, input, button {
+    margin: 5px;
+}
+
+#board {
+    display: grid;
+    gap: 1px;
+}
+
+.cell {
+    box-sizing: border-box;
+    background-color: #cccccc; /* Color fijo para todas las celdas */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    width: 50px;
+    height: 50px;
+}
+
+#winner-message {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    animation: popup-animation 0.5s ease-in-out;
+}
+
+@keyframes popup-animation {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.board-disabled {
+    pointer-events: none; /* Desactiva los clics en el tablero */
+    opacity: 0.5; /* Opcional: reduce la opacidad para mostrar que está deshabilitado */
+}
+
+/* Opcional: Estilos para el popup de ganador */
+#winner-popup {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background: white;
+    border: 2px solid black;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    text-align: center;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+#winner-popup h2 {
+    margin: 0;
+    font-size: 24px;
+}
+/* Estilos del popup de selección de tamaño */
+#size-menu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1001; /* Asegúrate de que esté sobre otros elementos */
+    display: none; /* Oculto por defecto */
+    grid-template-columns: repeat(4, 1fr); /* Cuadrícula de 4 columnas */
+    gap: 10px;
+}
+
+#size-menu.show {
+    display: grid;
+}
+
+/* Fondo semi-transparente detrás del popup */
+#popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000; /* Debajo del popup */
+    display: none; /* Oculto por defecto */
+}
+
+#popup-overlay.show {
+    display: block;
+}
+
+/* Estilo de los botones dentro del menú */
+#size-menu button {
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#size-menu button:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+#size-menu button.selected {
+    background-color: #1e7e34;
+}
+
+/* Botón de menú */
+#menu-button {
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+#menu-button:hover {
+    background-color: #0056b3;
+}

@@ -1,5 +1,6 @@
 import type { CellState } from '../../lib/game';
 import type { GameMode } from '../../i18n';
+import type { MarkPainting } from '../hooks/useMarkPainting';
 import type { RotationFx } from '../hooks/useTwisterRotation';
 import type { Skin } from '../skins';
 import { COLORS, ROTATION_ANIM_MS } from '../constants';
@@ -19,6 +20,7 @@ type BoardProps = Readonly<{
   showBlindColors: boolean;
   won: boolean;
   rotationFx: RotationFx;
+  painting: MarkPainting;
   onCellClick: (i: number) => void;
   onCellMark: (i: number) => void;
   colors?: string[];
@@ -59,6 +61,7 @@ export function Board({
   showBlindColors,
   won,
   rotationFx,
+  painting,
   onCellClick,
   onCellMark,
   colors = COLORS,
@@ -67,6 +70,12 @@ export function Board({
 }: BoardProps) {
   const animation = spinAnimation(rotationFx);
   const patterned = skin?.patterned && skin.regions;
+  // The click that ends a paint stroke must not also drop a queen on the cell
+  // the finger happened to be released over.
+  const handleCellClick = (i: number) => {
+    if (painting.shouldSwallowClick()) return;
+    onCellClick(i);
+  };
   // A cell's identity is its board coordinate, which is what the key encodes.
   const cellEntries = cells.map((cell, index) => ({
     key: `r${Math.trunc(index / size)}c${index % size}`,
@@ -80,6 +89,7 @@ export function Board({
       aria-label={tr('boardAria')}
       className={boardClassName(size, won)}
       style={{ gridTemplateColumns: `repeat(${size}, ${cellPixels(size)}px)`, animation }}
+      {...painting.handlers}
     >
       {cellEntries.map(({ key, index: i, cell }) => {
         const region = patterned ? skin!.regions![board[i]] : undefined;
@@ -99,7 +109,7 @@ export function Board({
             regionClass={showBlindColors && region ? `pat-${region.pattern}` : undefined}
             patternColors={showBlindColors && region ? { p1: region.p1, p2: region.p2 } : undefined}
             animal={showBlindColors ? region?.animal : undefined}
-            onClick={onCellClick}
+            onClick={handleCellClick}
             onMark={onCellMark}
             tr={tr}
           />

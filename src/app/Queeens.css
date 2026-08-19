@@ -459,6 +459,12 @@ body[data-skin="circus"] {
   background: var(--board-surface);
   box-shadow: var(--board-shadow);
   backdrop-filter: blur(2px);
+  /* Dragging across the board paints X marks, so the browser must not claim
+     the gesture for scrolling (touch) or text selection (mouse). */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 #board.disabled {
   pointer-events: none;

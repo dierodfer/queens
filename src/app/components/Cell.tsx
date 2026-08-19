@@ -1,5 +1,6 @@
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import { MARK, QUEEN, type CellState } from '../../lib/game';
+import { CELL_INDEX_ATTR } from '../hooks/useMarkPainting';
 import type { Tr } from './types';
 
 /** Print colours for a region, exposed to CSS as --p1 / --p2 custom properties. */
@@ -100,6 +101,7 @@ export function Cell(props: CellProps) {
     <button
       type="button"
       className={classes.join(' ')}
+      {...{ [CELL_INDEX_ATTR]: index }}
       aria-label={`${tr('cellRow')} ${row}, ${tr('cellCol')} ${col}: ${state}`}
       aria-pressed={cell === QUEEN}
       tabIndex={interactive ? 0 : -1}

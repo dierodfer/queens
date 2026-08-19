@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { I18N, type BlindLevel, type GameMode, type Lang } from '../i18n';
 import { SKINS, type SkinId } from './skins';
 import {
@@ -8,6 +8,7 @@ import {
   getAttacked,
   getAttackedByOneQueen,
   getConflicts,
+  paintCell,
   rotateFlat,
   type CellState,
   type RotationDirection,
@@ -19,11 +20,12 @@ import {
   loadRankingStore,
   saveRankingStore,
 } from '../lib/ranking';
-import { getBlindPreviewMs, getBlindReplayMs } from '../lib/blind';
+import { BLIND_REPLAY_MS, BLIND_REPLAY_PENALTY_MS, getBlindPreviewMs } from '../lib/blind';
 import { pickBoard } from '../lib/boardPicker';
 import { clearSession, loadSession, saveSession } from '../lib/session';
 import { useTimer } from './hooks/useTimer';
 import { useBlindPreview } from './hooks/useBlindPreview';
+import { useMarkPainting } from './hooks/useMarkPainting';
 import { useTwisterRotation } from './hooks/useTwisterRotation';
 import { Board } from './components/Board';
 import { ExitConfirm } from './components/ExitConfirm';
@@ -63,20 +65,26 @@ export default function Queeens() {
   const [marksSinceRotation, setMarksSinceRotation] = useState(0);
   const [lastAddTimestamp, setLastAddTimestamp] = useState<number>(Date.now());
 
+  const [paintingMarks, setPaintingMarks] = useState(false);
+
+  // Paint strokes read cell state outside of render. A stroke touches each cell
+  // at most once, so this snapshot only ever has to be fresh as of the last
+  // commit before the stroke began.
+  const cellsRef = useRef<CellState[]>(cells);
+  useEffect(() => {
+    cellsRef.current = cells;
+  }, [cells]);
+
   const {
     elapsed,
     setElapsed,
     start: startTimer,
     stop: stopTimer,
+    penalize,
     since,
   } = useTimer(initialSession?.elapsedMs ?? 0);
 
-  const clearQueens = useCallback(() => {
-    setCells((prev) => prev.map((cell) => (cell === QUEEN ? EMPTY : cell)) as CellState[]);
-    setLastPlacedQueen(null);
-    setLastAddTimestamp(Date.now());
-  }, []);
-  const blind = useBlindPreview(clearQueens);
+  const blind = useBlindPreview();
 
   const handleRotate = useCallback(
     (direction: RotationDirection) => {
@@ -92,6 +100,7 @@ export default function Queeens() {
   const rotation = useTwisterRotation({
     enabled: mode === 'twister' && size != null,
     paused: won || showMenu || showWin || showResume,
+    suspended: paintingMarks,
     lastAddTimestamp,
     marksSinceRotation,
     onRotate: handleRotate,
@@ -270,9 +279,13 @@ export default function Queeens() {
     startTimer(elapsed);
   }, [startTimer, elapsed]);
 
+  // A replay is a paid hint: it shows the colours again for a fixed 5s and
+  // leaves the board untouched, charging 20s of stopwatch time instead.
   const replayBlindPreview = useCallback(() => {
-    if (mode === 'blind' && blindLevel && size) blind.begin(getBlindReplayMs(blindLevel), true);
-  }, [mode, blindLevel, size, blind]);
+    if (mode !== 'blind' || !blindLevel || !size || won || blind.active) return;
+    penalize(BLIND_REPLAY_PENALTY_MS);
+    blind.begin(BLIND_REPLAY_MS);
+  }, [mode, blindLevel, size, won, blind, penalize]);
 
   const setCellAt = useCallback((i: number, value: CellState) => {
     setCells((prev) => {
@@ -310,6 +323,33 @@ export default function Queeens() {
     },
     [blind, won, cells, setCellAt],
   );
+
+  /**
+   * Sets one cell to the intent of the current paint stroke. Unlike
+   * `toggleMark` this is absolute, so every cell a drag crosses ends up in the
+   * same state no matter what it held before.
+   */
+  const paintMark = useCallback(
+    (i: number, mark: boolean) => {
+      if (blind.active || won) return;
+      // A cell that `paintCell` leaves alone (a queen, or one already in the
+      // target state) must not count towards the every-5-marks rotation.
+      if (paintCell(cellsRef.current, i, mark) === cellsRef.current) return;
+      setCells((prev) => paintCell(prev, i, mark));
+      setLastAddTimestamp(Date.now());
+      if (mark) setMarksSinceRotation((prev) => prev + 1);
+      setLastPlacedQueen(null);
+    },
+    [blind.active, won],
+  );
+
+  const painting = useMarkPainting({
+    enabled: size != null && !won && !blind.active,
+    isMarked: useCallback((i: number) => cellsRef.current[i] === MARK, []),
+    onPaint: paintMark,
+    onPaintStart: useCallback(() => setPaintingMarks(true), []),
+    onPaintEnd: useCallback(() => setPaintingMarks(false), []),
+  });
 
   const activeSkin = SKINS.find((s) => s.id === skinId) ?? SKINS[0];
 
@@ -363,6 +403,7 @@ export default function Queeens() {
           showBlindColors={showBlindColors}
           won={won}
           rotationFx={rotation.rotationFx}
+          painting={painting}
           onCellClick={placeQueen}
           onCellMark={toggleMark}
           colors={activeSkin.boardColors}

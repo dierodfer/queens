@@ -27,15 +27,29 @@ Queeens is a logic puzzle game built with React, TypeScript and Vite, where you 
 
 Attacked cells are marked and blocked for queen placement, so the board stays readable while you solve.
 
+## Controls 🖐️
+
+- **Tap / click** a cell to place or remove a queen.
+- **Right click** (or the `x` key on a focused cell) toggles a single discard X.
+- **Drag** across the board to paint a run of X marks in one gesture. The cell
+  you start on decides the whole stroke: start on an empty cell and everything
+  you cross gets marked, start on a marked one and everything you cross gets
+  cleared. Queens are never painted over, and the press that ends a stroke does
+  not place a queen.
+
 ## Game Modes ✨
 
 - **Classic** — the standard puzzle: place one queen per region with no two
   queens sharing a row, column, or short diagonal.
 - **Twister** — same rules as Classic, but the board rotates every time you
-  place a queen, mark 5 X cells, or after 30 seconds of inactivity.
+  place a queen, mark 5 X cells, or after 30 seconds of inactivity. A rotation
+  earned mid-drag waits until you lift your finger, so the board never spins
+  out from under the stroke you are drawing.
 - **Blind** — memorize the region colors during a preview countdown, then
   solve the board with the colors hidden. Choose `Easy`, `Medium`, or `Hard`
-  to change how long you get to memorize it.
+  to change how long you get to memorize it. **Show again** re-reveals the
+  colors for 5 seconds and costs +20 seconds on the clock; your queens stay
+  exactly where you put them.
 
 ## Quick Start 🚀
 
@@ -64,8 +78,9 @@ The code is organized in layers so each piece stays small and focused:
   detection, board rotation, ranking, time formatting, blind timing). No React,
   fully unit-tested.
 - **`src/app/hooks/`** — stateful behavior isolated from rendering: `useTimer`
-  (stopwatch), `useBlindPreview` (memorize countdown) and `useTwisterRotation`
-  (board rotation triggers and timers).
+  (stopwatch), `useBlindPreview` (memorize countdown), `useTwisterRotation`
+  (board rotation triggers and timers) and `useMarkPainting` (the drag-to-mark
+  gesture).
 - **`src/app/components/`** — presentational components that only render props.
 - **`src/app/Queeens.tsx`** — orchestrates state and wires the hooks and
   components together.

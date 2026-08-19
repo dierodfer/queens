@@ -9,6 +9,23 @@ export function oppositeDirection(direction: RotationDirection): RotationDirecti
   return direction === 'right' ? 'left' : 'right';
 }
 
+/**
+ * Applies a paint stroke's intent to a single cell.
+ *
+ * A stroke sets cells absolutely rather than toggling them, so every cell a
+ * drag crosses ends in the same state. Queens are never painted over, and a
+ * cell already in the target state is left alone — callers rely on the
+ * identity of the returned array to tell whether anything actually changed.
+ */
+export function paintCell(cells: CellState[], index: number, mark: boolean): CellState[] {
+  const target: CellState = mark ? MARK : EMPTY;
+  const current = cells[index];
+  if (current === undefined || current === QUEEN || current === target) return cells;
+  const next = [...cells];
+  next[index] = target;
+  return next;
+}
+
 /** Returns the indices of every queen that conflicts with another queen. */
 export function getConflicts(cells: CellState[], board: number[], size: number): Set<number> {
   const qs: number[] = [];

@@ -61,38 +61,16 @@ const DIAGONALS: ReadonlyArray<readonly [number, number]> = [
   [-1, -1],
 ];
 
-/** Returns every cell attacked (row, column, adjacent diagonal, same region) by any queen. */
-export function getAttacked(cells: CellState[], board: number[], size: number): Set<number> {
-  const set = new Set<number>();
-  cells.forEach((s, i) => {
-    if (s !== QUEEN) return;
-    const x = i % size;
-    const y = Math.trunc(i / size);
-    const region = board[i];
-    for (let k = 0; k < size; k++) {
-      set.add(y * size + k);
-      set.add(k * size + x);
-    }
-    DIAGONALS.forEach(([dx, dy]) => {
-      const nx = x + dx;
-      const ny = y + dy;
-      if (nx >= 0 && nx < size && ny >= 0 && ny < size) set.add(ny * size + nx);
-    });
-
-    // Also block every cell in the same color region.
-    board.forEach((cellRegion, ci) => {
-      if (cellRegion === region) set.add(ci);
-    });
-  });
-  return set;
-}
-
-/** Returns every cell attacked by a single queen, excluding its own cell. */
-export function getAttackedByOneQueen(qi: number, board: number[], size: number): Set<number> {
-  const set = new Set<number>();
+/**
+ * Adds every cell the queen at `qi` attacks — its row, its column, its adjacent
+ * diagonals and its whole colour region — into `set`, the queen's own cell
+ * included. The one reach rule the game has, so both public queries share it.
+ */
+function addAttackedBy(set: Set<number>, qi: number, board: number[], size: number): void {
   const qx = qi % size;
   const qy = Math.trunc(qi / size);
   const region = board[qi];
+
   for (let k = 0; k < size; k++) {
     set.add(qy * size + k);
     set.add(k * size + qx);
@@ -102,9 +80,25 @@ export function getAttackedByOneQueen(qi: number, board: number[], size: number)
     const ny = qy + dy;
     if (nx >= 0 && nx < size && ny >= 0 && ny < size) set.add(ny * size + nx);
   });
+  // Also block every cell in the same color region.
   board.forEach((cellRegion, ci) => {
     if (cellRegion === region) set.add(ci);
   });
+}
+
+/** Returns every cell attacked (row, column, adjacent diagonal, same region) by any queen. */
+export function getAttacked(cells: CellState[], board: number[], size: number): Set<number> {
+  const set = new Set<number>();
+  cells.forEach((s, i) => {
+    if (s === QUEEN) addAttackedBy(set, i, board, size);
+  });
+  return set;
+}
+
+/** Returns every cell attacked by a single queen, excluding its own cell. */
+export function getAttackedByOneQueen(qi: number, board: number[], size: number): Set<number> {
+  const set = new Set<number>();
+  addAttackedBy(set, qi, board, size);
   set.delete(qi);
   return set;
 }

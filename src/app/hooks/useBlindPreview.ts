@@ -3,21 +3,21 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 export type BlindPreview = {
   active: boolean;
   remainingMs: number;
-  begin: (ms: number, clearQueensOnEnd?: boolean) => void;
+  begin: (ms: number) => void;
   stop: () => void;
 };
 
 /**
- * Drives the "memorize the board" countdown used by blind mode. `onClearQueens`
- * is invoked when a preview that was started with `clearQueensOnEnd` finishes.
+ * Drives the "memorize the board" countdown used by blind mode. Previews are
+ * purely visual: queens already on the board are never touched, so a replay
+ * costs time (see `BLIND_REPLAY_PENALTY_MS`) instead of progress.
  */
-export function useBlindPreview(onClearQueens: () => void): BlindPreview {
+export function useBlindPreview(): BlindPreview {
   const [active, setActive] = useState(false);
   const [until, setUntil] = useState<number | null>(null);
   const [, tick] = useReducer((n: number) => n + 1, 0);
   const timerRef = useRef<number | null>(null);
   const tickRef = useRef<number | null>(null);
-  const clearOnEndRef = useRef(false);
 
   const clear = useCallback(() => {
     if (timerRef.current !== null) window.clearTimeout(timerRef.current);
@@ -25,17 +25,13 @@ export function useBlindPreview(onClearQueens: () => void): BlindPreview {
   }, []);
 
   const stop = useCallback(() => {
-    const shouldClearQueens = active && clearOnEndRef.current;
-    clearOnEndRef.current = false;
     clear();
     setActive(false);
     setUntil(null);
-    if (shouldClearQueens) onClearQueens();
-  }, [active, clear, onClearQueens]);
+  }, [clear]);
 
   const begin = useCallback(
-    (ms: number, clearQueensOnEnd = false) => {
-      clearOnEndRef.current = clearQueensOnEnd;
+    (ms: number) => {
       clear();
       setActive(true);
       setUntil(Date.now() + ms);

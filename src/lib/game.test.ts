@@ -7,6 +7,7 @@ import {
   getAttackedByOneQueen,
   getConflicts,
   oppositeDirection,
+  paintCell,
   rotateFlat,
   type CellState,
 } from './game';
@@ -111,5 +112,41 @@ describe('rotateFlat', () => {
     let grid = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     for (let k = 0; k < 4; k++) grid = rotateFlat(grid, 3, 'right');
     expect(grid).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  });
+});
+
+describe('paintCell', () => {
+  const cells = (): CellState[] => [EMPTY, MARK, QUEEN, EMPTY];
+
+  it('marks an empty cell', () => {
+    expect(paintCell(cells(), 0, true)).toEqual([MARK, MARK, QUEEN, EMPTY]);
+  });
+
+  it('clears a marked cell', () => {
+    expect(paintCell(cells(), 1, false)).toEqual([EMPTY, EMPTY, QUEEN, EMPTY]);
+  });
+
+  it('never paints over a queen', () => {
+    const before = cells();
+    expect(paintCell(before, 2, true)).toBe(before);
+    expect(paintCell(before, 2, false)).toBe(before);
+  });
+
+  it('returns the same array when the cell is already in the target state', () => {
+    const before = cells();
+    expect(paintCell(before, 1, true)).toBe(before);
+    expect(paintCell(before, 0, false)).toBe(before);
+  });
+
+  it('ignores an out-of-range index', () => {
+    const before = cells();
+    expect(paintCell(before, 99, true)).toBe(before);
+  });
+
+  it('is absolute, so a stroke leaves every crossed cell in the same state', () => {
+    // A stroke that starts on an empty cell marks everything it crosses,
+    // including cells that were already marked.
+    const stroke = [0, 1, 3].reduce((acc, i) => paintCell(acc, i, true), cells());
+    expect(stroke).toEqual([MARK, MARK, QUEEN, MARK]);
   });
 });

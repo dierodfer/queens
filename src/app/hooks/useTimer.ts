@@ -6,6 +6,8 @@ export type Timer = {
   /** Starts (or restarts) the stopwatch, optionally resuming from `resumeMs` instead of zero. */
   start: (resumeMs?: number) => void;
   stop: () => void;
+  /** Adds `ms` to the running time, as a penalty for an in-game assist. */
+  penalize: (ms: number) => void;
   /** Milliseconds elapsed since the last `start()`, computed on demand. */
   since: () => number;
 };
@@ -27,6 +29,13 @@ export function useTimer(initialMs = 0): Timer {
     if (timerRef.current !== null) window.clearInterval(timerRef.current);
   }, []);
 
+  // Charging time is the same as having started earlier, so the penalty flows
+  // into `since()` (and therefore the ranking and the autosaved session) too.
+  const penalize = useCallback((ms: number) => {
+    startedAt.current -= ms;
+    setElapsed(Date.now() - startedAt.current);
+  }, []);
+
   const since = useCallback(() => Date.now() - startedAt.current, []);
 
   useEffect(
@@ -36,5 +45,5 @@ export function useTimer(initialMs = 0): Timer {
     [],
   );
 
-  return { elapsed, setElapsed, start, stop, since };
+  return { elapsed, setElapsed, start, stop, penalize, since };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getBlindPreviewMs, getBlindReplayMs } from './blind';
+import { BLIND_REPLAY_MS, BLIND_REPLAY_PENALTY_MS, getBlindPreviewMs } from './blind';
 
 describe('getBlindPreviewMs', () => {
   it('uses the base time for the smallest board', () => {
@@ -19,10 +19,12 @@ describe('getBlindPreviewMs', () => {
   });
 });
 
-describe('getBlindReplayMs', () => {
-  it('returns the per-level replay seconds in ms', () => {
-    expect(getBlindReplayMs('easy')).toBe(15000);
-    expect(getBlindReplayMs('medium')).toBe(10000);
-    expect(getBlindReplayMs('hard')).toBe(5000);
+describe('replay constants', () => {
+  it('reveals for 5 seconds regardless of level', () => {
+    expect(BLIND_REPLAY_MS).toBe(5000);
+  });
+
+  it('charges 20 seconds for a replay', () => {
+    expect(BLIND_REPLAY_PENALTY_MS).toBe(20000);
   });
 });

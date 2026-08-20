@@ -10,6 +10,12 @@ type Options = {
   enabled: boolean;
   /** Suspend the idle-timeout rotation (menu/win/solved). */
   paused: boolean;
+  /**
+   * Hold back the every-5-marks rotation while a paint stroke is in progress,
+   * so the board never spins out from under the finger drawing on it. Releasing
+   * the flag rotates immediately if the stroke got there.
+   */
+  suspended?: boolean;
   lastAddTimestamp: number;
   marksSinceRotation: number;
   /** Applies a 90deg rotation to the board once the swap delay elapses. */
@@ -27,6 +33,7 @@ export type TwisterRotation = {
 export function useTwisterRotation({
   enabled,
   paused,
+  suspended = false,
   lastAddTimestamp,
   marksSinceRotation,
   onRotate,
@@ -69,10 +76,10 @@ export function useTwisterRotation({
     return () => window.clearInterval(timer);
   }, [enabled, paused, lastAddTimestamp, trigger]);
 
-  // Rotate after 5 marks.
+  // Rotate after 5 marks — deferred to the end of a paint stroke.
   useEffect(() => {
-    if (enabled && marksSinceRotation >= 5) trigger();
-  }, [enabled, marksSinceRotation, trigger]);
+    if (enabled && !suspended && marksSinceRotation >= 5) trigger();
+  }, [enabled, suspended, marksSinceRotation, trigger]);
 
   useEffect(() => clearTimers, [clearTimers]);
 

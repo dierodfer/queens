@@ -459,6 +459,12 @@ body[data-skin="circus"] {
   background: var(--board-surface);
   box-shadow: var(--board-shadow);
   backdrop-filter: blur(2px);
+  /* Dragging across the board paints X marks, so the browser must not claim
+     the gesture for scrolling (touch) or text selection (mouse). */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 #board.disabled {
   pointer-events: none;
@@ -885,7 +891,9 @@ body[data-skin="circus"] {
   color: #fff;
   box-shadow: 0 6px 14px var(--primary-active-shadow);
 }
-#mode-rules {
+/* The two panels the menu stacks under the mode tabs share one look. */
+#mode-rules,
+#blind-levels {
   grid-column: 1 / -1;
   margin-top: 2px;
   padding: 10px;
@@ -893,7 +901,8 @@ body[data-skin="circus"] {
   border: 1px solid var(--surface-alt-border);
   background: var(--surface-alt);
 }
-#mode-rules h4 {
+#mode-rules h4,
+#blind-levels h4 {
   margin-bottom: 6px;
   font-size: 14px;
   color: var(--text-accent);
@@ -903,19 +912,6 @@ body[data-skin="circus"] {
   color: var(--text-rules);
   font-size: 13px;
   line-height: 1.35;
-}
-#blind-levels {
-  grid-column: 1 / -1;
-  margin-top: 2px;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid var(--surface-alt-border);
-  background: var(--surface-alt);
-}
-#blind-levels h4 {
-  margin-bottom: 6px;
-  font-size: 14px;
-  color: var(--text-accent);
 }
 #blind-level-switch {
   display: flex;

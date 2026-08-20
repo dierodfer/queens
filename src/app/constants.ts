@@ -39,7 +39,7 @@ export const MODE_RULE_KEYS: Record<GameMode, string[]> = {
     'mode.twister.rule.3',
     'mode.twister.rule.4',
   ],
-  blind: ['mode.blind.rule.1', 'mode.blind.rule.2'],
+  blind: ['mode.blind.rule.1', 'mode.blind.rule.2', 'mode.blind.rule.3'],
 };
 
 export const BLIND_LEVEL_LABEL_KEYS: Record<BlindLevel, string> = {

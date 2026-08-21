@@ -8,8 +8,9 @@ type Options = {
   /** Painting is allowed (live board, no blind preview running). */
   enabled: boolean;
   /**
-   * Whether the cell the gesture started on already carries a mark. Decides the
-   * whole stroke's intent: starting on a marked cell erases, otherwise marks.
+   * Whether the cell the gesture started on already carries a mark, sampled the
+   * instant it is pressed. Decides the whole stroke's intent: pressing a marked
+   * cell erases, pressing an unmarked one marks.
    */
   isMarked: (index: number) => boolean;
   /** Applies the stroke's intent to one cell. Called once per cell per stroke. */
@@ -34,6 +35,8 @@ export type MarkPainting = {
    * board can swallow it instead of placing a queen. Reset on the next press.
    */
   shouldSwallowClick: () => boolean;
+  /** Same, for the `contextmenu` a right-button stroke leaves behind. */
+  shouldSwallowContextMenu: () => boolean;
 };
 
 /** Resolves the cell index under a viewport point, or null if there is none. */
@@ -67,6 +70,7 @@ export function useMarkPainting({
   const markingRef = useRef(false);
   const paintedRef = useRef(false);
   const swallowClickRef = useRef(false);
+  const swallowContextMenuRef = useRef(false);
   // Cells already painted by this stroke: a pointer emits many moves per cell,
   // and re-painting one would double-count it towards the rotation trigger.
   const visitedRef = useRef<Set<number>>(new Set());
@@ -78,7 +82,10 @@ export function useMarkPainting({
     paintedRef.current = false;
     visitedRef.current.clear();
     if (!wasPainting) return;
+    // Windows fires `contextmenu` on button release, so a right-button stroke
+    // ends with one pending that would toggle back the cell it stopped on.
     swallowClickRef.current = true;
+    swallowContextMenuRef.current = true;
     setPainting(false);
     onPaintEnd();
   }, [onPaintEnd]);
@@ -86,19 +93,26 @@ export function useMarkPainting({
   const onPointerDown = useCallback(
     (e: ReactPointerEvent<HTMLElement>) => {
       swallowClickRef.current = false;
-      // Only the primary button paints; right-click stays a single-cell toggle.
-      if (!enabled || e.button !== 0) return;
+      swallowContextMenuRef.current = false;
+      // Left and right button both paint, so a right-drag continues the mark a
+      // right-click starts. Anything else (middle, back) is left alone.
+      if (!enabled || (e.button !== 0 && e.button !== 2)) return;
       const index = cellIndexAt(e.clientX, e.clientY);
       if (index == null) return;
       pointerRef.current = e.pointerId;
       originRef.current = index;
       paintedRef.current = false;
       visitedRef.current.clear();
+      // Sample the intent NOW, before the press itself changes anything. A
+      // long-press on touch and a right-press on desktop both toggle this cell
+      // via `contextmenu` while the finger is still down; reading the state
+      // afterwards would invert the stroke and erase the mark just made.
+      markingRef.current = !isMarked(index);
       // Deliberately no `setPointerCapture` yet: capturing here would retarget
       // the compatibility click to the board, and a press that never becomes a
       // drag has to reach the cell as an ordinary click so it places a queen.
     },
-    [enabled],
+    [enabled, isMarked],
   );
 
   const onPointerMove = useCallback(
@@ -111,7 +125,6 @@ export function useMarkPainting({
       if (!paintedRef.current) {
         // Still on the starting cell: this is not (yet) a drag.
         if (index === origin) return;
-        markingRef.current = !isMarked(origin);
         paintedRef.current = true;
         // Now that this is unambiguously a stroke, capture the pointer so it
         // keeps reporting even if the finger leaves the board.
@@ -125,7 +138,7 @@ export function useMarkPainting({
       visitedRef.current.add(index);
       onPaint(index, markingRef.current);
     },
-    [isMarked, onPaint, onPaintStart],
+    [onPaint, onPaintStart],
   );
 
   const onPointerUp = useCallback(
@@ -159,9 +172,16 @@ export function useMarkPainting({
     return true;
   }, []);
 
+  const shouldSwallowContextMenu = useCallback(() => {
+    if (!swallowContextMenuRef.current) return false;
+    swallowContextMenuRef.current = false;
+    return true;
+  }, []);
+
   return {
     painting,
     handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel },
     shouldSwallowClick,
+    shouldSwallowContextMenu,
   };
 }

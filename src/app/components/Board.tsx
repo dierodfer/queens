@@ -71,10 +71,15 @@ export function Board({
   const animation = spinAnimation(rotationFx);
   const patterned = skin?.patterned && skin.regions;
   // The click that ends a paint stroke must not also drop a queen on the cell
-  // the finger happened to be released over.
+  // the finger happened to be released over, and the `contextmenu` a
+  // right-button stroke leaves behind must not toggle that cell back.
   const handleCellClick = (i: number) => {
     if (painting.shouldSwallowClick()) return;
     onCellClick(i);
+  };
+  const handleCellMark = (i: number) => {
+    if (painting.shouldSwallowContextMenu()) return;
+    onCellMark(i);
   };
   // A cell's identity is its board coordinate, which is what the key encodes.
   const cellEntries = cells.map((cell, index) => ({
@@ -90,6 +95,9 @@ export function Board({
       className={boardClassName(size, won)}
       style={{ gridTemplateColumns: `repeat(${size}, ${cellPixels(size)}px)`, animation }}
       {...painting.handlers}
+      // Pointer capture retargets a right-drag's `contextmenu` here, past the
+      // cell's own handler, so the native menu is suppressed board-wide.
+      onContextMenu={(e) => e.preventDefault()}
     >
       {cellEntries.map(({ key, index: i, cell }) => {
         const region = patterned ? skin!.regions![board[i]] : undefined;
@@ -110,7 +118,7 @@ export function Board({
             patternColors={showBlindColors && region ? { p1: region.p1, p2: region.p2 } : undefined}
             animal={showBlindColors ? region?.animal : undefined}
             onClick={handleCellClick}
-            onMark={onCellMark}
+            onMark={handleCellMark}
             tr={tr}
           />
         );

@@ -71,8 +71,8 @@ export const MESSAGES = {
     es: 'No pueden compartir fila, columna ni diagonal corta.',
   },
   'mode.classic.rule.3': {
-    en: 'Right click to mark a discard X; drag across the board to mark or clear a whole run.',
-    es: 'Click derecho para marcar una cruz; arrastra por el tablero para marcar o quitar varias.',
+    en: 'Right click to mark a discard X; drag with either button to mark or clear a whole run.',
+    es: 'Click derecho para marcar una cruz; arrastra con cualquier boton para marcar o quitar varias.',
   },
   'mode.twister.rule.1': { en: 'Board rotates when:', es: 'El tablero gira cuando:' },
   'mode.twister.rule.2': { en: '- you place a queen', es: '- colocas una reina' },

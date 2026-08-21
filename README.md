@@ -31,11 +31,14 @@ Attacked cells are marked and blocked for queen placement, so the board stays re
 
 - **Tap / click** a cell to place or remove a queen.
 - **Right click** (or the `x` key on a focused cell) toggles a single discard X.
-- **Drag** across the board to paint a run of X marks in one gesture. The cell
-  you start on decides the whole stroke: start on an empty cell and everything
-  you cross gets marked, start on a marked one and everything you cross gets
-  cleared. Queens are never painted over, and the press that ends a stroke does
-  not place a queen.
+- **Drag** across the board — with either mouse button, or a finger — to paint a
+  run of X marks in one gesture. The state of the cell **at the moment you press
+  it** decides the whole stroke: press an unmarked cell and everything you cross
+  gets marked, press a marked one and everything you cross gets cleared. That
+  holds even though pressing a cell can mark it on its own (a long press on
+  touch, a right press on desktop), so holding and then sliding keeps marking
+  rather than undoing itself. Queens are never painted over, and the press that
+  ends a stroke does not place a queen.
 
 ## Game Modes ✨
 
